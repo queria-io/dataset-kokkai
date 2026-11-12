@@ -1,0 +1,16 @@
+name: "ndl"
+version: "1.0.0"
+
+profile: "ndl"
+
+model-paths: ["models"]
+macro-paths: ["shared/macros"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  ndl:
+    +database: ndl
+    +materialized: table
