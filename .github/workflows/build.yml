@@ -1,6 +1,6 @@
 name: Build
 
-# 公開せずに直近 1 か月の取得と dbt build だけを回す。API の形が変わったときに Sync より先に気づくため
+# 公開せずに直近 1 か月（発言が無ければ発言のある月まで）の取得と dbt build だけを回す。API の形が変わったときに Sync より先に気づくため
 on:
   pull_request:
   workflow_dispatch:

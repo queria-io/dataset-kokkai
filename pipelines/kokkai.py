@@ -1,10 +1,12 @@
-"""国会会議録検索システムの検索用 API から、発言を 1 件ずつ取り出す。
+"""国会会議録検索システムの検索用 API から、発言を 1 件ずつ取得する。
 
-発言単位出力（/api/speech）を、開会日（from・until）で 1 か月ずつに絞って取る。1 回で
+発言単位出力（/api/speech）を、開会日（from・until）で 1 か月ずつに絞って取得する。1 回で
 返るのは 100 件までなので、nextRecordPosition をたどってページを送る。
 
 会議録は開会から数週間〜数か月たって登録される。毎回、公開中の表の最後の開会日から
-REFETCH_DAYS 日前までさかのぼって取り直す。初回と過去分は MAX_DAYS 日ずつ進める。
+REFETCH_DAYS 日前までさかのぼって再取得する。初回と過去分は MAX_DAYS 日ずつ進め、
+MAX_MINUTES 分を超えたら取得済みの月までで止める（1 年の発言数は年代で 10 万〜21 万件と
+差があり、日数だけでは Sync の制限時間に収まらない）。
 
 出力: data/kokkai/speeches/<年>-<月>.ndjson.gz（1 行 = 1 発言、API の speechRecord のまま）
 
@@ -34,6 +36,8 @@ OUTPUT = Path("data/kokkai/speeches")
 FIRST_DAY = date(1947, 5, 20)
 REFETCH_DAYS = 180
 MAX_DAYS = int(os.environ.get("KOKKAI_MAX_DAYS", "1100"))
+# Sync の timeout_minutes (150) から dbt build と fdl commit・push の時間を引いた残り
+MAX_MINUTES = int(os.environ.get("KOKKAI_MAX_MINUTES", "100"))
 PAGE_SIZE = 100
 # 利用条件は短時間の大量アクセスを控えるよう求めている。1 回ずつ間を空ける
 INTERVAL_SECONDS = 1.0
@@ -71,7 +75,10 @@ def next_month(day: date) -> date:
 
 
 def published_cursor() -> date | None:
-    """公開中の kokkai.speeches の最後の開会日。FDL_WORKING が無いか、表がまだ無ければ None。"""
+    """公開中の kokkai.meetings の最後の開会日。FDL_WORKING が無いか、表がまだ無ければ None。
+
+    speeches と同じ値で、行数が少ない meetings を読む。
+    """
     working = os.environ.get("FDL_WORKING")
     if not working:
         return None
@@ -81,7 +88,7 @@ def published_cursor() -> date | None:
     con.execute("INSTALL ducklake; LOAD ducklake; INSTALL httpfs; LOAD httpfs;")
     con.execute(f"ATTACH 'ducklake:{working.replace(chr(39), chr(39) * 2)}' AS previous (READ_ONLY, META_TYPE 'sqlite')")
     try:
-        return con.sql("select max(date) from previous.kokkai.speeches").fetchall()[0][0]
+        return con.sql("select max(date) from previous.kokkai.meetings").fetchall()[0][0]
     except duckdb.CatalogException as error:
         logger.info("  公開中の表が無い: %s", error)
         return None
@@ -97,21 +104,40 @@ def span_to_fetch(cursor: date | None, today: date, has_catalog: bool) -> tuple[
     return start, min(start + timedelta(days=MAX_DAYS - 1), today)
 
 
+def fetch_month(first: date, last: date, fetched_at: str, output: Path) -> int:
+    rows = [json.dumps({**row, "fetched_at": fetched_at}, ensure_ascii=False) for row in speeches(first, last)]
+    path = output / f"{first:%Y-%m}.ndjson.gz"
+    with replacing(path) as partial, gzip.open(partial, "wt", encoding="utf-8") as f:
+        f.writelines(row + "\n" for row in rows)
+    logger.info("  %s〜%s: %d 発言", first, last, len(rows))
+    return len(rows)
+
+
 def download_kokkai(output: Path = OUTPUT) -> int:
     today = datetime.now(ZoneInfo("Asia/Tokyo")).date()
+    has_catalog = bool(os.environ.get("FDL_WORKING"))
     cursor = published_cursor()
-    start, end = span_to_fetch(cursor, today, bool(os.environ.get("FDL_WORKING")))
+    start, end = span_to_fetch(cursor, today, has_catalog)
     logger.info("  前回の最後の開会日 %s、%s から %s まで", cursor, start, end)
     output.mkdir(parents=True, exist_ok=True)
     fetched_at = datetime.now(UTC).isoformat()
+    deadline = time.monotonic() + MAX_MINUTES * 60
     total = 0
     for first, last in months(start, end):
-        rows = [json.dumps({**row, "fetched_at": fetched_at}, ensure_ascii=False) for row in speeches(first, last)]
-        path = output / f"{first:%Y-%m}.ndjson.gz"
-        with replacing(path) as partial, gzip.open(partial, "wt", encoding="utf-8") as f:
-            f.writelines(row + "\n" for row in rows)
-        total += len(rows)
-        logger.info("  %s〜%s: %d 発言", first, last, len(rows))
+        total += fetch_month(first, last, fetched_at, output)
+        if time.monotonic() > deadline:
+            # 取得済みの月までを公開し、次のビルドは公開した最後の開会日から続ける
+            logger.info("  %d 分を超えたので %s までで止める", MAX_MINUTES, last)
+            break
+    if not has_catalog:
+        # 閉会中は 1 か月以上発言の無いことがある。PR のビルド確認は、発言のある月まで
+        # 1 か月ずつさかのぼる
+        first = date(start.year, start.month, 1)
+        for _ in range(12):
+            if total:
+                break
+            first = (first - timedelta(days=1)).replace(day=1)
+            total += fetch_month(first, next_month(first) - timedelta(days=1), fetched_at, output)
     if total == 0:
-        raise SystemExit("1 件も取れない（API の形が変わった？）")
+        raise SystemExit("1 件も取得できない（API の形が変わった？）")
     return total
