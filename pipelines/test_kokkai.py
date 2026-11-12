@@ -16,6 +16,10 @@ class SpanTest(unittest.TestCase):
     def test_refetches_before_cursor(self):
         self.assertEqual(span_to_fetch(date(2026, 10, 30), date(2026, 11, 12), True), (date(2026, 5, 3), date(2026, 11, 12)))
 
+    def test_backfill_continues_from_cursor(self):
+        start, _ = span_to_fetch(date(1960, 3, 4), date(2026, 11, 12), True)
+        self.assertEqual(start, date(1960, 3, 4))
+
     def test_first_run_starts_at_first_diet(self):
         start, end = span_to_fetch(None, date(2026, 11, 12), True)
         self.assertEqual(start, date(1947, 5, 20))

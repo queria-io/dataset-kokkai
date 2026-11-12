@@ -4,7 +4,7 @@
 返るのは 100 件までなので、nextRecordPosition をたどってページを送る。
 
 会議録は開会から数週間〜数か月たって登録される。毎回、公開中の表の最後の開会日から
-REFETCH_DAYS 日前までさかのぼって再取得する。初回と過去分は MAX_DAYS 日ずつ進め、
+REFETCH_DAYS 日前までさかのぼって再取得する（過去分の取得中は最後の開会日から続ける）。初回と過去分は MAX_DAYS 日ずつ進め、
 MAX_MINUTES 分を超えたら取得済みの月までで止める（1 年の発言数は年代で 10 万〜21 万件と
 差があり、日数だけでは Sync の制限時間に収まらない）。
 
@@ -22,6 +22,7 @@ import time
 from collections.abc import Iterator
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
+from urllib.error import HTTPError
 from urllib.parse import urlencode
 from zoneinfo import ZoneInfo
 
@@ -48,7 +49,11 @@ def page(start: date, end: date, record: int) -> dict:
         {"from": start.isoformat(), "until": end.isoformat(), "startRecord": record,
          "maximumRecords": PAGE_SIZE, "recordPacking": "json"}
     )
-    body = json.loads(fetch(f"{API}?{query}", user_agent=USER_AGENT))
+    try:
+        body = json.loads(fetch(f"{API}?{query}", user_agent=USER_AGENT))
+    except HTTPError as error:
+        # 条件の誤りは 400 と JSON の message で返る
+        raise SystemExit(f"API が {error.code} を返した: {start}〜{end} {record}: {error.read()[:300].decode('utf-8', 'replace')}") from None
     if "message" in body:
         raise SystemExit(f"API がエラーを返した: {start}〜{end} {record}: {body['message']}")
     return body
@@ -100,7 +105,12 @@ def span_to_fetch(cursor: date | None, today: date, has_catalog: bool) -> tuple[
     if not has_catalog:
         # PR のビルド確認は直近の 1 か月だけ
         return today - timedelta(days=30), today
-    start = max(FIRST_DAY, cursor - timedelta(days=REFETCH_DAYS)) if cursor else FIRST_DAY
+    # 直近の会議録だけが後から登録される。過去分の取得中は最後の開会日から続ける
+    start = (
+        FIRST_DAY if cursor is None
+        else cursor if cursor < today - timedelta(days=REFETCH_DAYS)
+        else cursor - timedelta(days=REFETCH_DAYS)
+    )
     return start, min(start + timedelta(days=MAX_DAYS - 1), today)
 
 
