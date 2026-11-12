@@ -1,0 +1,52 @@
+schema: kokkai
+name: speeches
+title: 国会の発言
+description: |-
+  国会の本会議・委員会での発言です。1 行が 1 発言で、発言者・会派・役職と本文を持ちます。
+
+  - speech_order が 0 の行は、出席者・議事日程などを載せた会議録の冒頭（speaker は「会議録情報」）です
+  - 会議の情報は kokkai.meetings にあり、meeting_id で結合できます。開会日・院名・会議名はこのテーブルにもあります
+  - 語を含む発言は speech の LIKE で検索できます
+primary_key: [speech_id]
+sources:
+  - path: https://kokkai.ndl.go.jp/api.html
+fields:
+  - name: speech_id
+    title: 発言 ID
+    description: 会議録 ID と発言番号を組み合わせた ID（speechID）
+  - name: meeting_id
+    title: 会議録 ID
+    description: kokkai.meetings と結合できる
+  - name: date
+    title: 開会日
+  - name: house
+    title: 院名
+  - name: meeting_name
+    title: 会議名
+  - name: speech_order
+    title: 発言番号
+    description: 会議録の中での順番。0 は会議録の冒頭
+  - name: speaker
+    title: 発言者名
+  - name: speaker_yomi
+    title: 発言者の読み
+  - name: speaker_group
+    title: 会派
+    description: 発言した時点の所属会派。国会議員でない発言者（政府参考人など）と会議録の冒頭は NULL
+  - name: speaker_position
+    title: 肩書き
+    description: 例 内閣総理大臣、委員長
+  - name: speaker_role
+    title: 役割
+    description: 証人・参考人・公述人。それ以外は NULL
+  - name: speech
+    title: 発言
+    description: 発言の本文。先頭に「○発言者名　」が付く
+  - name: start_page
+    title: 掲載ページ
+    description: 会議録 PDF の中で発言が始まるページ
+  - name: speech_url
+    title: 発言の URL
+    description: 国会会議録検索システムでこの発言を開く URL
+  - name: fetched_at
+    title: 取得日時

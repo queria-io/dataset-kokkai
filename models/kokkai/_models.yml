@@ -1,0 +1,28 @@
+version: 2
+
+models:
+  - name: meetings
+    columns:
+      - name: meeting_id
+        data_tests: [unique, not_null]
+      - name: house
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [衆議院, 参議院, 両院]
+      - name: date
+        data_tests: [not_null]
+  - name: speeches
+    columns:
+      - name: speech_id
+        data_tests: [unique, not_null]
+      - name: meeting_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('meetings')
+                field: meeting_id
+      - name: speech_order
+        data_tests: [not_null]

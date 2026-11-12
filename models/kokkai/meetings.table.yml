@@ -1,0 +1,40 @@
+schema: kokkai
+name: meetings
+title: 国会の会議
+description: |-
+  国会会議録検索システムに収録されている会議の一覧です。1 行が 1 つの会議録（本会議・委員会などの 1 号）です。
+
+  - 発言は kokkai.speeches にあり、meeting_id で結合できます
+  - 会議録は開会から数週間〜数か月たって登録されます。直近の会議はまだ無いことがあります
+primary_key: [meeting_id]
+sources:
+  - path: https://kokkai.ndl.go.jp/api.html
+fields:
+  - name: meeting_id
+    title: 会議録 ID
+    description: 国会会議録検索システムが会議録ごとに付ける 21 桁の ID（issueID）
+  - name: house
+    title: 院名
+    description: 衆議院・参議院・両院
+  - name: session
+    title: 国会回次
+  - name: meeting_name
+    title: 会議名
+    description: 例 本会議、予算委員会、議院運営委員会庶務小委員会
+  - name: issue
+    title: 号数
+    description: 例 第1号
+  - name: date
+    title: 開会日
+  - name: image_kind
+    title: 種別
+    description: 国会会議録検索システムの種別（会議録・目次・索引・附録・追録）
+  - name: closing
+    title: 閉会中
+    description: 閉会中に開かれた会議は「閉」。それ以外は NULL
+  - name: meeting_url
+    title: 会議録テキストの URL
+  - name: pdf_url
+    title: 会議録 PDF の URL
+  - name: fetched_at
+    title: 取得日時
