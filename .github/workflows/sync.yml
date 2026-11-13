@@ -22,7 +22,7 @@ jobs:
       id-token: write
     uses: queria-io/dataset-shared/.github/workflows/sync.yml@67443c88b6ec355559c91bf866239e10073ccf83
     with:
-      dataset_name: ndl
+      dataset_name: kokkai
       # 過去分は 1 回に最大 1,100 日分を取得し、100 分（KOKKAI_MAX_MINUTES）を超えたら取得済みの月までで止める
       timeout_minutes: 150
     secrets:

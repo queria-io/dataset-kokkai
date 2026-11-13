@@ -31,7 +31,7 @@ from shared.fetch import fetch, replacing
 logger = logging.getLogger("pipelines")
 
 API = "https://kokkai.ndl.go.jp/api/speech"
-USER_AGENT = "dataset-ndl (+https://github.com/queria-io/dataset-ndl)"
+USER_AGENT = "dataset-kokkai (+https://github.com/queria-io/dataset-kokkai)"
 OUTPUT = Path("data/kokkai/speeches")
 # 第 1 回国会の開会日
 FIRST_DAY = date(1947, 5, 20)
@@ -80,7 +80,7 @@ def next_month(day: date) -> date:
 
 
 def published_cursor() -> date | None:
-    """公開中の kokkai.meetings の最後の開会日。FDL_WORKING が無いか、表がまだ無ければ None。
+    """公開中の minutes.meetings の最後の開会日。FDL_WORKING が無いか、表がまだ無ければ None。
 
     speeches と同じ値で、行数が少ない meetings を読む。
     """
@@ -93,7 +93,7 @@ def published_cursor() -> date | None:
     con.execute("INSTALL ducklake; LOAD ducklake; INSTALL httpfs; LOAD httpfs;")
     con.execute(f"ATTACH 'ducklake:{working.replace(chr(39), chr(39) * 2)}' AS previous (READ_ONLY, META_TYPE 'sqlite')")
     try:
-        return con.sql("select max(date) from previous.kokkai.meetings").fetchall()[0][0]
+        return con.sql("select max(date) from previous.minutes.meetings").fetchall()[0][0]
     except duckdb.CatalogException as error:
         logger.info("  公開中の表が無い: %s", error)
         return None

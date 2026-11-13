@@ -208,7 +208,7 @@ wheels = [
 ]
 
 [[package]]
-name = "dataset-ndl"
+name = "dataset-kokkai"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
