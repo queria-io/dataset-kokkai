@@ -1,15 +1,11 @@
-# 国立国会図書館
+# 国会会議録
 
-国立国会図書館が公開するデータを SQL で検索できるテーブルにしたデータセットです。今は国会会議録検索システムの国会会議録を収録しています。
-
-## 国会会議録（kokkai）
-
-[国会会議録検索システム](https://kokkai.ndl.go.jp/)に収録されている衆議院・参議院の本会議と委員会の会議録を、会議と発言のテーブルにしたものです。毎週、[検索用 API](https://kokkai.ndl.go.jp/api.html) から新しく登録された会議録を取得します。
+[国会会議録検索システム](https://kokkai.ndl.go.jp/)に収録されている衆議院・参議院の本会議と委員会の会議録を、会議と発言のテーブルにしたデータセットです。毎週、[検索用 API](https://kokkai.ndl.go.jp/api.html) から新しく登録された会議録を取得します。
 
 | テーブル | 内容 |
 | --- | --- |
-| `kokkai.meetings` | 1 行が 1 会議録（本会議・委員会などの 1 号）。院名・国会回次・会議名・号数・開会日・会議録の URL |
-| `kokkai.speeches` | 1 行が 1 発言。開会日・会議名・発言者・会派・肩書きと発言の本文 |
+| `minutes.meetings` | 1 行が 1 会議録（本会議・委員会などの 1 号）。院名・国会回次・会議名・号数・開会日・会議録の URL |
+| `minutes.speeches` | 1 行が 1 発言。開会日・会議名・発言者・会派・肩書きと発言の本文 |
 
 - `meeting_id`（会議録 ID）で 2 つのテーブルを結合できます
 - `speech_order` が 0 の行は、出席者・議事日程などを載せた会議録の冒頭です
@@ -21,7 +17,7 @@
 
 ```sql
 SELECT date, meeting_name, speaker, speaker_group, speech_url
-FROM ndl.kokkai.speeches
+FROM kokkai.minutes.speeches
 WHERE speech LIKE '%待機児童%'
 ORDER BY date DESC
 LIMIT 20;
@@ -31,7 +27,7 @@ LIMIT 20;
 
 ```sql
 SELECT speaker_group, count(*) AS speeches
-FROM ndl.kokkai.speeches
+FROM kokkai.minutes.speeches
 WHERE date >= DATE '2025-01-01' AND speaker_group IS NOT NULL
 GROUP BY speaker_group
 ORDER BY speeches DESC;

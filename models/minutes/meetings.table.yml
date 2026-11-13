@@ -1,10 +1,10 @@
-schema: kokkai
+schema: minutes
 name: meetings
 title: 国会の会議
 description: |-
   国会会議録検索システムに収録されている会議の一覧です。1 行が 1 つの会議録（本会議・委員会などの 1 号）です。
 
-  - 発言は kokkai.speeches にあり、meeting_id で結合できます
+  - 発言は minutes.speeches にあり、meeting_id で結合できます
   - 会議録は開会から数週間〜数か月たって登録されます。直近の会議はまだ無いことがあります
 primary_key: [meeting_id]
 sources:

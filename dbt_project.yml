@@ -1,7 +1,7 @@
-name: "ndl"
+name: "kokkai"
 version: "1.0.0"
 
-profile: "ndl"
+profile: "kokkai"
 
 model-paths: ["models"]
 macro-paths: ["shared/macros"]
@@ -11,6 +11,6 @@ clean-targets:
   - "dbt_packages"
 
 models:
-  ndl:
-    +database: ndl
+  kokkai:
+    +database: kokkai
     +materialized: table

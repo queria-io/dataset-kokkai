@@ -1,11 +1,11 @@
-schema: kokkai
+schema: minutes
 name: speeches
 title: 国会の発言
 description: |-
   国会の本会議・委員会での発言です。1 行が 1 発言で、発言者・会派・役職と本文を持ちます。
 
   - speech_order が 0 の行は、出席者・議事日程などを載せた会議録の冒頭（speaker は「会議録情報」）です
-  - 会議の情報は kokkai.meetings にあり、meeting_id で結合できます。開会日・院名・会議名はこのテーブルにもあります
+  - 会議の情報は minutes.meetings にあり、meeting_id で結合できます。開会日・院名・会議名はこのテーブルにもあります
   - 語を含む発言は speech の LIKE で検索できます
 primary_key: [speech_id]
 sources:
@@ -16,7 +16,7 @@ fields:
     description: 会議録 ID と発言番号を組み合わせた ID（speechID）
   - name: meeting_id
     title: 会議録 ID
-    description: kokkai.meetings と結合できる
+    description: minutes.meetings と結合できる
   - name: date
     title: 開会日
   - name: house
