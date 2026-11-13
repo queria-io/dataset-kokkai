@@ -114,6 +114,11 @@ def span_to_fetch(cursor: date | None, today: date, has_catalog: bool) -> tuple[
     return start, min(start + timedelta(days=MAX_DAYS - 1), today)
 
 
+def already_fetched(first: date, last: date, today: date, output: Path) -> bool:
+    """再取得の範囲より前の月で、ファイルがもうあるか。途中で止まった手元の取得を続きから再開するため。"""
+    return last < today - timedelta(days=REFETCH_DAYS) and (output / f"{first:%Y-%m}.ndjson.gz").exists()
+
+
 def fetch_month(first: date, last: date, fetched_at: str, output: Path) -> int:
     rows = [json.dumps({**row, "fetched_at": fetched_at}, ensure_ascii=False) for row in speeches(first, last)]
     path = output / f"{first:%Y-%m}.ndjson.gz"
@@ -133,7 +138,11 @@ def download_kokkai(output: Path = OUTPUT) -> int:
     fetched_at = datetime.now(UTC).isoformat()
     deadline = time.monotonic() + MAX_MINUTES * 60
     total = 0
+    skipped = 0
     for first, last in months(start, end):
+        if already_fetched(first, last, today, output):
+            skipped += 1
+            continue
         total += fetch_month(first, last, fetched_at, output)
         if time.monotonic() > deadline:
             # 取得済みの月までを公開し、次のビルドは公開した最後の開会日から続ける
@@ -148,6 +157,8 @@ def download_kokkai(output: Path = OUTPUT) -> int:
                 break
             first = (first - timedelta(days=1)).replace(day=1)
             total += fetch_month(first, next_month(first) - timedelta(days=1), fetched_at, output)
-    if total == 0:
+    if skipped:
+        logger.info("  取得済みの %d か月を飛ばした", skipped)
+    if total == 0 and not skipped:
         raise SystemExit("1 件も取得できない（API の形が変わった？）")
     return total
