@@ -1,6 +1,4 @@
-{# 取得した発言 (data/kokkai/speeches/*.ndjson.gz) を型を付けて読む。同じ発言が
-   重なった月の取り直しで 2 回入ったときは、後に取った方を残す #}
-{{ config(materialized='ephemeral') }}
+{# 取得した発言 (data/kokkai/speeches/*.ndjson.gz)。API の speechRecord の項目をそのまま読む #}
 
 select *
 from read_json(
@@ -15,4 +13,3 @@ from read_json(
         meetingURL: 'VARCHAR', pdfURL: 'VARCHAR', fetched_at: 'TIMESTAMPTZ'
     }
 )
-qualify row_number() over (partition by speechID order by fetched_at desc) = 1

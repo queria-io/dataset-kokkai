@@ -1,12 +1,15 @@
-{# 発言 1 件 1 行。まだ無い発言だけを追記する。会議録は登録後に書き換えない前提で、前回の行は残す #}
-{{ config(materialized='incremental', incremental_strategy='append') }}
+{# 発言 1 件 1 行。列名を変更する。同じ発言が重なった月の取り直しで 2 回入ったときは、後に取った方を残す #}
 
 select
     speechID as speech_id,
     issueID as meeting_id,
-    date,
     nameOfHouse as house,
+    session,
     nameOfMeeting as meeting_name,
+    issue,
+    date,
+    imageKind as image_kind,
+    closing,
     speechOrder as speech_order,
     speaker,
     speakerYomi as speaker_yomi,
@@ -16,9 +19,8 @@ select
     speech,
     startPage as start_page,
     speechURL as speech_url,
+    meetingURL as meeting_url,
+    pdfURL as pdf_url,
     fetched_at
 from {{ ref('raw_speeches') }}
-{% if is_incremental() %}
-where speechID not in (select speech_id from {{ this }})
-{% endif %}
-order by date, meeting_id, speech_order
+qualify row_number() over (partition by speechID order by fetched_at desc) = 1
