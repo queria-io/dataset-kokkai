@@ -1,4 +1,4 @@
-$schema: https://queria-io.github.io/tabledoc/schemas/dataset/v1.json
+$schema: https://tabledoc.queria.io/schemas/dataset/v1.json
 name: kokkai
 schema: _queria
 title: 国会会議録
