@@ -22,3 +22,5 @@ jobs:
       - run: uv run python -m unittest pipelines.test_kokkai
       - run: uv run python -c "import main; main.download()"
       - run: uv run dbt build --profiles-dir ci
+      # 説明（tabledoc.yml とテーブルごとの *.tabledoc.yml）を、Sync と同じ tabledoc で検査する
+      - run: uvx --from "tabledoc>=0.5.0" tabledoc validate --strict

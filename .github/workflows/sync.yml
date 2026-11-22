@@ -14,13 +14,11 @@ concurrency:
 
 jobs:
   sync:
-    # Queria への書き込みは GitHub Actions の OIDC で 1 時間のトークンを取って行う。
-    # contents と pull-requests は、Queria で変更された説明をこのリポジトリに戻す PR に使う
+    # Queria への書き込みは GitHub Actions の OIDC で 1 時間のトークンを取って行う
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
       id-token: write
-    uses: queria-io/dataset-shared/.github/workflows/sync.yml@252f25b5f027b83c61e265125e7557259135e8e7
+    uses: queria-io/dataset-shared/.github/workflows/sync.yml@d2b1d0b6abc1fd74fb8e2014a7299ddd46b080f5
     with:
       dataset_name: kokkai
       # 過去分は 1 回に最大 1,100 日分を取得し、100 分（KOKKAI_MAX_MINUTES）を超えたら取得済みの月までで止める

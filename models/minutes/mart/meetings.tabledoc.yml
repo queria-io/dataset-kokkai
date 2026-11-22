@@ -1,5 +1,4 @@
-schema: minutes
-name: meetings
+$schema: https://tabledoc.queria.io/schemas/table/v1.json
 title: 国会の会議
 description: |-
   国会会議録検索システムに収録されている会議の一覧です。1 行が 1 つの会議録（本会議・委員会などの 1 号）です。
@@ -9,7 +8,7 @@ description: |-
 primary_key: [meeting_id]
 sources:
   - path: https://kokkai.ndl.go.jp/api.html
-fields:
+columns:
   - name: meeting_id
     title: 会議録 ID
     description: 国会会議録検索システムが会議録ごとに付ける 21 桁の ID（issueID）
