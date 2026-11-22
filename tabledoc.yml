@@ -37,5 +37,4 @@ schemas:
   - name: minutes
     title: 会議録
 queria:
-  themes: [government_finance]
   cover: 🏛️
