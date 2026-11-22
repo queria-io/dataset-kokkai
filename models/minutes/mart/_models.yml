@@ -2,27 +2,135 @@ version: 2
 
 models:
   - name: meetings
+    description: |-
+      国会会議録検索システムに収録されている会議の一覧です。1 行が 1 つの会議録（本会議・委員会などの 1 号）です。
+
+      - 発言は minutes.speeches にあり、meeting_id で結合できます
+      - 会議録は開会から数週間〜数か月たって登録されます。直近の会議はまだ無いことがあります
+    config:
+      meta:
+        title: 国会の会議
+        primary_key: [meeting_id]
+        sources:
+          - path: https://kokkai.ndl.go.jp/api.html
     columns:
       - name: meeting_id
+        description: 国会会議録検索システムが会議録ごとに付ける 21 桁の ID（issueID）
+        config:
+          meta: {title: 会議録 ID}
         data_tests: [unique, not_null]
       - name: house
+        description: 衆議院・参議院・両院
+        config:
+          meta: {title: 院名}
         data_tests:
-          - not_null
-          - accepted_values:
-              arguments:
-                values: [衆議院, 参議院, 両院]
+        - not_null
+        - accepted_values:
+            arguments:
+              values: [衆議院, 参議院, 両院]
+      - name: session
+        config:
+          meta: {title: 国会回次}
+      - name: meeting_name
+        description: 例 本会議、予算委員会、議院運営委員会庶務小委員会
+        config:
+          meta: {title: 会議名}
+      - name: issue
+        description: 例 第1号
+        config:
+          meta: {title: 号数}
       - name: date
+        config:
+          meta: {title: 開会日}
         data_tests: [not_null]
+      - name: image_kind
+        description: 国会会議録検索システムの種別（会議録・目次・索引・附録・追録）
+        config:
+          meta: {title: 種別}
+      - name: closing
+        description: 閉会中に開かれた会議は「閉」。それ以外は NULL
+        config:
+          meta: {title: 閉会中}
+      - name: meeting_url
+        config:
+          meta: {title: 会議録テキストの URL}
+      - name: pdf_url
+        config:
+          meta: {title: 会議録 PDF の URL}
+      - name: fetched_at
+        config:
+          meta: {title: 取得日時}
   - name: speeches
+    description: |-
+      国会の本会議・委員会での発言です。1 行が 1 発言で、発言者・会派・役職と本文を持ちます。
+
+      - speech_order が 0 の行は、出席者・議事日程などを載せた会議録の冒頭（speaker は「会議録情報」）です
+      - 会議の情報は minutes.meetings にあり、meeting_id で結合できます。開会日・院名・会議名はこのテーブルにもあります
+      - 語を含む発言は speech の LIKE で検索できます
+    config:
+      meta:
+        title: 国会の発言
+        primary_key: [speech_id]
+        sources:
+          - path: https://kokkai.ndl.go.jp/api.html
     columns:
       - name: speech_id
+        description: 会議録 ID と発言番号を組み合わせた ID（speechID）
+        config:
+          meta: {title: 発言 ID}
         data_tests: [unique, not_null]
       - name: meeting_id
+        description: minutes.meetings と結合できる
+        config:
+          meta: {title: 会議録 ID}
         data_tests:
-          - not_null
-          - relationships:
-              arguments:
-                to: ref('meetings')
-                field: meeting_id
+        - not_null
+        - relationships:
+            arguments: {to: ref('meetings'), field: meeting_id}
+      - name: date
+        config:
+          meta: {title: 開会日}
+      - name: house
+        config:
+          meta: {title: 院名}
+      - name: meeting_name
+        config:
+          meta: {title: 会議名}
       - name: speech_order
+        description: 会議録の中での順番。0 は会議録の冒頭
+        config:
+          meta: {title: 発言番号}
         data_tests: [not_null]
+      - name: speaker
+        config:
+          meta: {title: 発言者名}
+      - name: speaker_yomi
+        config:
+          meta: {title: 発言者の読み}
+      - name: speaker_group
+        description: 発言した時点の所属会派。国会議員でない発言者（政府参考人など）と会議録の冒頭は NULL
+        config:
+          meta: {title: 会派}
+      - name: speaker_position
+        description: 例 内閣総理大臣、委員長
+        config:
+          meta: {title: 肩書き}
+      - name: speaker_role
+        description: 証人・参考人・公述人。それ以外は NULL
+        config:
+          meta: {title: 役割}
+      - name: speech
+        description: 発言の本文。先頭に「○発言者名　」が付く
+        config:
+          meta: {title: 発言}
+      - name: start_page
+        description: 会議録 PDF の中で発言が始まるページ
+        config:
+          meta: {title: 掲載ページ}
+      - name: speech_url
+        description: 国会会議録検索システムでこの発言を開く URL
+        config:
+          meta: {title: 発言の URL}
+      - name: fetched_at
+        config:
+          meta: {title: 取得日時}
