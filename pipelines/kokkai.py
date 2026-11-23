@@ -42,9 +42,11 @@ MAX_MINUTES = int(os.environ.get("KOKKAI_MAX_MINUTES", "100"))
 PAGE_SIZE = 100
 # 利用条件は短時間の大量アクセスを控えるよう求めている。1 回ずつ間を空ける
 INTERVAL_SECONDS = 1.0
+SPURIOUS_400_RETRIES = 3
+RETRY_SECONDS = 10.0
 
 
-def page(start: date, end: date, record: int) -> dict:
+def page(start: date, end: date, record: int, attempt: int = 0) -> dict:
     query = urlencode(
         {"from": start.isoformat(), "until": end.isoformat(), "startRecord": record,
          "maximumRecords": PAGE_SIZE, "recordPacking": "json"}
@@ -53,7 +55,14 @@ def page(start: date, end: date, record: int) -> dict:
         body = json.loads(fetch(f"{API}?{query}", user_agent=USER_AGENT))
     except HTTPError as error:
         # 条件の誤りは 400 と JSON の message で返る
-        raise SystemExit(f"API が {error.code} を返した: {start}〜{end} {record}: {error.read()[:300].decode('utf-8', 'replace')}") from None
+        detail = error.read()[:300].decode("utf-8", "replace")
+        # API は正しい条件にもときどき 19005（maximumRecords の範囲外）の 400 を返す。同じ要求を送り直すと通る
+        if error.code == 400 and "19005" in detail and attempt < SPURIOUS_400_RETRIES:
+            wait = RETRY_SECONDS * 2**attempt
+            logger.warning("API が 19005 を返したので %.0f 秒後に送り直す: %s〜%s %s", wait, start, end, record)
+            time.sleep(wait)
+            return page(start, end, record, attempt + 1)
+        raise SystemExit(f"API が {error.code} を返した: {start}〜{end} {record}: {detail}") from None
     if "message" in body:
         raise SystemExit(f"API がエラーを返した: {start}〜{end} {record}: {body['message']}")
     return body
