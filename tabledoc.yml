@@ -27,11 +27,11 @@ licenses:
 sources:
   - id: kokkai-api
     title: 国会会議録検索システム 検索用 API
-    path: https://kokkai.ndl.go.jp/api.html
+    url: https://kokkai.ndl.go.jp/api.html
 contributors:
   - id: ndl
     title: 国立国会図書館
-    path: https://www.ndl.go.jp/
+    url: https://www.ndl.go.jp/
     roles: [publisher]
 spatial_coverage: [JP]
 update_frequency: weekly
