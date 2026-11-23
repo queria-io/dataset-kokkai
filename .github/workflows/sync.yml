@@ -18,7 +18,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    uses: queria-io/dataset-shared/.github/workflows/sync.yml@5438b43d5e32827d10d49863aa57f4f5303fbab7
+    uses: queria-io/dataset-shared/.github/workflows/sync.yml@4aafe4fe1a8d514011ca7ef5beb0e8a0ea261888
     with:
       dataset_name: kokkai
       # 過去分は 1 回に最大 1,100 日分を取得し、100 分（KOKKAI_MAX_MINUTES）を超えたら取得済みの月までで止める
