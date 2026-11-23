@@ -1,6 +1,5 @@
 $schema: https://tabledoc.queria.io/schemas/dataset/v1.json
 name: kokkai
-schema: _queria
 title: 国会会議録
 description: |-
   国会会議録検索システム（国立国会図書館）に収録されている衆議院・参議院の本会議と委員会の会議録を、会議（minutes.meetings）と発言（minutes.speeches）のテーブルにしたものです。発言ごとに開会日・会議名・発言者・会派・肩書きと本文を持ち、会議録 ID で 2 つのテーブルを結合できます。毎週、検索用 API から新しく登録された会議録を取得します。
@@ -25,10 +24,12 @@ language: ja
 licenses:
   - JP-PDL-1.0
 sources:
-  - title: 国会会議録検索システム 検索用 API
+  - id: kokkai-api
+    title: 国会会議録検索システム 検索用 API
     path: https://kokkai.ndl.go.jp/api.html
 contributors:
-  - title: 国立国会図書館
+  - id: ndl
+    title: 国立国会図書館
     path: https://www.ndl.go.jp/
     roles: [publisher]
 spatial_coverage: [JP]
@@ -36,5 +37,3 @@ update_frequency: weekly
 schemas:
   - name: minutes
     title: 会議録
-queria:
-  cover: 🏛️
