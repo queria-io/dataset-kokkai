@@ -7,8 +7,7 @@ description: |-
   - 会議の情報は minutes.meetings にあり、meeting_id で結合できます。開会日・院名・会議名はこのテーブルにもあります
   - 語を含む発言は speech の LIKE で検索できます
 primary_key: [speech_id]
-sources:
-  - path: https://kokkai.ndl.go.jp/api.html
+sources: [kokkai-api]
 columns:
   - name: speech_id
     title: 発言 ID
