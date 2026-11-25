@@ -14,6 +14,7 @@ columns:
   - name: house
     title: 院名
     description: 衆議院・参議院・両院
+    dimension: categorical
   - name: session
     title: 国会回次
   - name: meeting_name

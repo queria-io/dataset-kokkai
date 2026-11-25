@@ -19,6 +19,7 @@ columns:
     title: 開会日
   - name: house
     title: 院名
+    dimension: categorical
   - name: meeting_name
     title: 会議名
   - name: speech_order
@@ -37,6 +38,7 @@ columns:
   - name: speaker_role
     title: 役割
     description: 証人・参考人・公述人。それ以外は NULL
+    dimension: categorical
   - name: speech
     title: 発言
     description: 発言の本文。先頭に「○発言者名　」が付く
